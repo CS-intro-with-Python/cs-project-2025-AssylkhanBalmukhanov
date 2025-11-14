@@ -5,6 +5,7 @@ import os
 
 app = Flask(__name__)
 
+
 @app.route('/')
 def index():
     return "Server is running! API and Docker are verified."
