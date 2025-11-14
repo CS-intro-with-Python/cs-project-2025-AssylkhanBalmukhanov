@@ -1,1 +1,30 @@
+name: CI/CD Pipeline
 
+on: [push]
+
+jobs:
+  build-and-test-docker:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image
+        run: |
+          echo "Building the Docker image..."
+          docker build . --file Dockerfile --tag my-chess-app:latest
+
+      - name: Run Docker container
+        run: |
+          docker run -d -p 5000:5000 --name chess-test-container my-chess-app:latest
+      - name: Install Python requests
+        run: |
+          pip install requests
+
+      - name: Test root route using client.py
+        run: |
+          python client.py
