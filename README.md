@@ -35,7 +35,7 @@ CS_2025_project/
 ### 1. Setup
 ```bash
 # Clone repository
-git clone <repo>
+git clone git@github.com:CS-intro-with-Python/cs-project-2025-AssylkhanBalmukhanov.git
 cd CS_2025_project
 
 # Add your CSV file
