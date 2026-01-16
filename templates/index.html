@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Memory Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .game-section {
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, button, select {
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .board-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+
+        .board-wrapper {
+            text-align: center;
+        }
+
+        .board-wrapper h3 {
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        .chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            border: 3px solid #333;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .square.light {
+            background-color: #f0d9b5;
+        }
+
+        .square.dark {
+            background-color: #b58863;
+        }
+
+        .square:hover {
+            opacity: 0.8;
+        }
+
+        .square.wrong {
+            background-color: #ff6b6b !important;
+        }
+
+        .square.correct {
+            background-color: #51cf66 !important;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .info-box h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .result {
+            background: #e7f5ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .result h3 {
+            color: #1864ab;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .piece-selector {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .piece-btn {
+            padding: 15px;
+            font-size: 32px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .piece-btn:hover {
+            background: #667eea;
+            border-color: #667eea;
+            transform: scale(1.1);
+        }
+
+        .piece-btn.selected {
+            background: #667eea;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>♟️ Chess Memory Game</h1>
+
+        <div class="game-section">
+            <div class="controls">
+                <div>
+                    <label for="pieceCount">Number of pieces:</label>
+                    <input type="number" id="pieceCount" min="2" max="32" value="10">
+                </div>
+                <div>
+                    <label for="memoryTime">Memory time (seconds):</label>
+                    <input type="number" id="memoryTime" min="5" max="120" value="30">
+                </div>
+                <button id="startBtn" onclick="startGame()">Start Game</button>
+            </div>
+
+            <div id="timer" class="timer hidden"></div>
+
+            <div id="pieceSelector" class="piece-selector hidden">
+                <button class="piece-btn" onclick="selectPiece('K')">♔</button>
+                <button class="piece-btn" onclick="selectPiece('Q')">♕</button>
+                <button class="piece-btn" onclick="selectPiece('R')">♖</button>
+                <button class="piece-btn" onclick="selectPiece('B')">♗</button>
+                <button class="piece-btn" onclick="selectPiece('N')">♘</button>
+                <button class="piece-btn" onclick="selectPiece('P')">♙</button>
+                <button class="piece-btn" onclick="selectPiece('k')">♚</button>
+                <button class="piece-btn" onclick="selectPiece('q')">♛</button>
+                <button class="piece-btn" onclick="selectPiece('r')">♜</button>
+                <button class="piece-btn" onclick="selectPiece('b')">♝</button>
+                <button class="piece-btn" onclick="selectPiece('n')">♞</button>
+                <button class="piece-btn" onclick="selectPiece('p')">♟</button>
+            </div>
+
+            <div class="board-container" id="boardContainer"></div>
+
+            <div class="controls">
+                <button id="submitBtn" class="hidden" onclick="submitAnswer()">Submit Answer</button>
+                <button id="clearBtn" class="hidden" onclick="clearBoard()">Clear Board</button>
+            </div>
+
+            <div id="result" class="result hidden"></div>
+        </div>
+
+        <div class="info-box">
+            <h3>📊 Game Statistics</h3>
+            <div class="stats" id="stats"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '';
+        let currentSession = null;
+        let originalFen = '';
+        let timerInterval = null;
+        let selectedPiece = null;
+        let userBoard = Array(8).fill(null).map(() => Array(8).fill('.'));
+
+        const pieceUnicode = {
+            'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
+            'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
+        };
+
+        function selectPiece(piece) {
+            selectedPiece = piece;
+            document.querySelectorAll('.piece-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+        }
+
+        async function startGame() {
+            const pieceCount = parseInt(document.getElementById('pieceCount').value);
+            const memoryTime = parseInt(document.getElementById('memoryTime').value);
+
+            try {
+                const response = await fetch(`${API_URL}/api/game/start`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({piece_count: pieceCount})
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentSession = data.session_id;
+                    originalFen = data.fen;
+
+                    showMemorizePhase(data.fen, memoryTime);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Failed to start game: ' + error);
+            }
+        }
+
+        function showMemorizePhase(fen, seconds) {
+            document.getElementById('boardContainer').innerHTML = `
+                <div class="board-wrapper">
+                    <h3>Memorize this position!</h3>
+                    <div class="chessboard" id="memorizeBoard"></div>
+                </div>
+            `;
+
+            renderBoard('memorizeBoard', fen, false);
+
+            document.getElementById('timer').classList.remove('hidden');
+            document.getElementById('startBtn').disabled = true;
+
+            let timeLeft = seconds;
+            updateTimer(timeLeft);
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimer(timeLeft);
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showRecallPhase();
+                }
+            }, 1000);
+        }
+
+        function updateTimer(seconds) {
+            document.getElementById('timer').textContent = `Time left: ${seconds}s`;
+        }
+
+        function showRecallPhase() {
+            userBoard = Array(8).fill(null).map(() => Array(8).fill('.'));
+
+            document.getElementById('boardContainer').innerHTML = `
+                <div class="board-wrapper">
+                    <h3>Recreate the position!</h3>
+                    <div class="chessboard" id="userBoard"></div>
+                </div>
+            `;
+
+            renderBoard('userBoard', boardToFen(userBoard), true);
+
+            document.getElementById('timer').classList.add('hidden');
+            document.getElementById('pieceSelector').classList.remove('hidden');
+            document.getElementById('submitBtn').classList.remove('hidden');
+            document.getElementById('clearBtn').classList.remove('hidden');
+        }
+
+        function renderBoard(boardId, fen, interactive) {
+            const board = fenToBoard(fen);
+            const boardElement = document.getElementById(boardId);
+            boardElement.innerHTML = '';
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = document.createElement('div');
+                    square.className = `square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                    square.textContent = pieceUnicode[board[row][col]] || '';
+
+                    if (interactive) {
+                        square.onclick = () => placePiece(row, col);
+                    }
+
+                    boardElement.appendChild(square);
+                }
+            }
+        }
+
+        function placePiece(row, col) {
+            if (selectedPiece) {
+                userBoard[row][col] = selectedPiece;
+                renderBoard('userBoard', boardToFen(userBoard), true);
+            } else {
+                userBoard[row][col] = '.';
+                renderBoard('userBoard', boardToFen(userBoard), true);
+            }
+        }
+
+        function clearBoard() {
+            userBoard = Array(8).fill(null).map(() => Array(8).fill('.'));
+            renderBoard('userBoard', boardToFen(userBoard), true);
+        }
+
+        async function submitAnswer() {
+            const userFen = boardToFen(userBoard);
+
+            try {
+                const response = await fetch(`${API_URL}/api/game/submit`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        session_id: currentSession,
+                        user_fen: userFen
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult(data);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Failed to submit answer: ' + error);
+            }
+        }
+
+        function showResult(data) {
+            document.getElementById('boardContainer').innerHTML = `
+                <div class="board-wrapper">
+                    <h3>Correct Position</h3>
+                    <div class="chessboard" id="correctBoard"></div>
+                </div>
+                <div class="board-wrapper">
+                    <h3>Your Answer</h3>
+                    <div class="chessboard" id="answerBoard"></div>
+                </div>
+            `;
+
+            renderBoard('correctBoard', data.correct_fen, false);
+            renderBoardWithDifferences('answerBoard', data.user_fen, data.differences);
+
+            const percentage = ((data.score / data.total_pieces) * 100).toFixed(1);
+
+            document.getElementById('result').innerHTML = `
+                <h3>Results</h3>
+                <p><strong>Score:</strong> ${data.score} / ${data.total_pieces} pieces correct (${percentage}%)</p>
+                <p><strong>Mistakes:</strong> ${data.differences.length}</p>
+            `;
+            document.getElementById('result').classList.remove('hidden');
+
+            document.getElementById('pieceSelector').classList.add('hidden');
+            document.getElementById('submitBtn').classList.add('hidden');
+            document.getElementById('clearBtn').classList.add('hidden');
+            document.getElementById('startBtn').disabled = false;
+
+            loadStats();
+        }
+
+        function renderBoardWithDifferences(boardId, fen, differences) {
+            const board = fenToBoard(fen);
+            const boardElement = document.getElementById(boardId);
+            boardElement.innerHTML = '';
+
+            const wrongSquares = new Set(differences.map(d => d.square));
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = document.createElement('div');
+                    const squareName = String.fromCharCode(97 + col) + (8 - row);
+
+                    square.className = `square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                    if (wrongSquares.has(squareName)) {
+                        square.classList.add('wrong');
+                    }
+
+                    square.textContent = pieceUnicode[board[row][col]] || '';
+                    boardElement.appendChild(square);
+                }
+            }
+        }
+
+        function fenToBoard(fen) {
+            const board = [];
+            const fenBoard = fen.split(' ')[0];
+
+            for (const row of fenBoard.split('/')) {
+                const boardRow = [];
+                for (const char of row) {
+                    if (char >= '1' && char <= '8') {
+                        boardRow.push(...Array(parseInt(char)).fill('.'));
+                    } else {
+                        boardRow.push(char);
+                    }
+                }
+                board.push(boardRow);
+            }
+
+            return board;
+        }
+
+        function boardToFen(board) {
+            const rows = [];
+
+            for (const row of board) {
+                let fenRow = '';
+                let emptyCount = 0;
+
+                for (const piece of row) {
+                    if (piece === '.') {
+                        emptyCount++;
+                    } else {
+                        if (emptyCount > 0) {
+                            fenRow += emptyCount;
+                            emptyCount = 0;
+                        }
+                        fenRow += piece;
+                    }
+                }
+
+                if (emptyCount > 0) {
+                    fenRow += emptyCount;
+                }
+
+                rows.push(fenRow);
+            }
+
+            return rows.join('/') + ' w KQkq - 0 1';
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_URL}/api/stats`);
+                const data = await response.json();
+
+                document.getElementById('stats').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${data.total_games}</div>
+                        <div class="stat-label">Games Played</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${data.average_score}%</div>
+                        <div class="stat-label">Average Score</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // Load stats on page load
+        loadStats();
+    </script>
+</body>
+</html>

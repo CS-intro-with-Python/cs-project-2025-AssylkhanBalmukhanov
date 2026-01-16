@@ -1,0 +1,72 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, stable ]
+  pull_request:
+    branches: [ main, stable ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: |
+        docker build -t chess-memory-app .
+
+    - name: Verify Docker image builds successfully
+      run: |
+        docker images | grep chess-memory-app
+
+    - name: Run Docker container
+      run: |
+        docker run -d -p 5000:5000 --name chess-app -e DATABASE_URL=sqlite:///chess_memory.db chess-memory-app
+        sleep 10
+
+    - name: Check if container is running
+      run: |
+        docker ps | grep chess-app
+
+    - name: Test health endpoint from outside container
+      run: |
+        curl -f http://localhost:5000/health || exit 1
+
+    - name: Test API routes from outside container
+      run: |
+        curl -f http://localhost:5000/api/positions || exit 1
+        curl -f http://localhost:5000/api/stats || exit 1
+
+    - name: Test route accessibility
+      run: |
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health)
+        if [ $response -ne 200 ]; then
+          echo "Health check failed with status code: $response"
+          exit 1
+        fi
+        echo "✓ All routes accessible from outside container"
+
+    - name: Stop and remove container
+      if: always()
+      run: |
+        docker stop chess-app || true
+        docker rm chess-app || true
+
+    - name: Docker logs
+      if: failure()
+      run: |
+        docker logs chess-app || true
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+    - name: Deploy notification
+      run: |
+        echo "✓ CI checks passed"
+        echo "Railway will auto-deploy from main branch"

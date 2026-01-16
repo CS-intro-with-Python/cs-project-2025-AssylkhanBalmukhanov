@@ -1,2 +1,9 @@
 Flask
-Pandas
+flask-sqlalchemy
+flask-cors
+requests
+pytest
+pytest-flask
+python-dotenv
+psycopg2-binary
+gunicorn
