@@ -1,39 +1,145 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/DESIFpxz)
-# CS_2025_project
+# CS_2025_project - Chess Memory Game
 
 ## Description
-My project is heavily inspired by videos of different chess grandmasters playing chess blindfolded. The idea is extremely simple. User chooses amount of pieces on the board, and he is given the position to remember. After certain amount of time user needs to recreate the position by placing pieces onto the board. After that website shows pieces user got wrong. There are also some extensions that can be implemented, for example, giving user ability to determine the best move in the position. Reseach suggests that practicing blindfold chess improves sighted chess skill.(https://pmc.ncbi.nlm.nih.gov/articles/PMC2972788/#:~:text=Some%20of%20the%20strongest%20masters,chess%20improves%20sighted%20chess%20skill.) 
 
+A chess position memory training application. Users choose the number of pieces, memorize a position, and then recreate it. The app shows which pieces were placed correctly.
 
+## Technologies
 
-## Setup
+- **Flask 3.0.0** - Web framework
+- **Flask-SQLAlchemy 3.1.1** - Database ORM
+- **PostgreSQL 15** - Database (Docker Compose)
+- **Docker & Docker Compose** - Containerization
+- **GitHub Actions** - CI/CD
+- **Railway** - Deployment
 
-Describe the steps to set up the environment and run the application. This can be a bash script or docker commands.
+## Project Structure
 
 ```
-Your commands
-
+CS_2025_project/
+├── app.py                    # Flask application
+├── load_data.py              # Load CSV data
+├── requirements.txt          # Dependencies
+├── Dockerfile                # Docker config
+├── docker-compose.yml        # Multi-container setup
+├── .github/workflows/
+│   └── ci-cd.yml            # CI/CD pipeline
+├── templates/
+│   └── index.html           # Web interface
+└── data/
+    └── puzzles.csv          # Chess positions
 ```
 
-## Requirements
+## Deployment with Docker Compose
 
-Describe technologies, libraries, languages you are using (this can be updated in the future).
+### 1. Setup
+```bash
+# Clone repository
+git clone <repo>
+cd CS_2025_project
 
-## Features
+# Add your CSV file
+cp puzzles.csv data/
+```
 
-Describe the main features the application performs.
+### 2. Start Application
+```bash
+docker-compose up -d
+```
 
-* Feature 1
-* Feature 2
+### 3. Load Data
+```bash
+docker exec chess_web python load_data.py data/puzzles.csv
+```
 
-## Git
+### 4. Access
+Open http://localhost:5000
 
-Specify which branch will store the latest stable version of the application
+## CSV Format
 
-## Success Criteria
+`data/puzzles.csv` format:
+```csv
+FEN,Evaluation,PieceCount
+rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1,0.0,32
+```
 
-Describe the criteria by which the success of the project can be determined
-(this will be updated in the future)
+## API Endpoints
 
-* Criteria 1
+- `GET /` - Web interface
+- `GET /health` - Health check
+- `GET /api/positions` - All positions
+- `GET /api/positions/count/<n>` - Positions with n pieces
+- `POST /api/game/start` - Start game
+- `POST /api/game/submit` - Submit answer
+- `GET /api/stats` - Statistics
 
+## Logs
+
+```bash
+# View all logs
+docker-compose logs -f
+
+# Web service only
+docker-compose logs -f web
+
+# Database only
+docker-compose logs -f db
+```
+
+## Stop Application
+
+```bash
+docker-compose down
+```
+
+## CI/CD
+
+GitHub Actions automatically:
+1. Builds Docker image
+2. Runs container
+3. Tests route accessibility
+
+## Deployment to Railway
+
+1. Push code to GitHub
+2. Create Railway project from GitHub repo
+3. Add PostgreSQL database
+4. Set environment variables:
+   - `SECRET_KEY=<random-key>`
+   - `PORT=5000`
+5. Deploy
+6. Load data: `railway run python load_data.py data/puzzles.csv`
+
+## Environment Variables
+
+- `DATABASE_URL` - PostgreSQL connection (auto-set by Railway)
+- `SECRET_KEY` - Flask secret key
+- `FLASK_ENV` - Environment (production/development)
+- `PORT` - Application port (default: 5000)
+
+## Troubleshooting
+
+### Container won't start
+```bash
+docker-compose down -v
+docker-compose up -d
+```
+
+### Data not loading
+```bash
+# Check file exists
+ls -la data/puzzles.csv
+
+# Reload data
+docker exec chess_web python load_data.py data/puzzles.csv
+```
+
+### Port 5000 in use
+```bash
+# Kill process
+lsof -ti:5000 | xargs kill -9
+```
+
+## License
+
+Educational project for CS_2025 course. 
